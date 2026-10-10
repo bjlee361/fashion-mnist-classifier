@@ -2,6 +2,7 @@
 data/
 runs/
 *.pt
+web/
 
 # Python
 __pycache__/
