@@ -1,0 +1,19 @@
+# Downloaded dataset and training outputs (copy the plots you want to show into assets/)
+data/
+runs/
+*.pt
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
