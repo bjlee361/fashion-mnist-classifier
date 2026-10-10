@@ -2,27 +2,51 @@
 
 This project classifies 28×28 grayscale images of clothing into 10 categories (shirts, sneakers, bags and so on). It compares a fully connected network with a small convolutional network to show how much convolution helps on image data. The training pipeline uses a proper train/validation/test split, checkpointing, learning-rate scheduling, and diagnostic plots.
 
-<!-- After training, put your confusion matrix here:
 ![CNN confusion matrix](assets/cnn_confusion_matrix.png)
--->
 
 ## Results
 
-<!-- TODO: fill in from `python compare.py` after training both models -->
+Test accuracy is measured once, on the 10,000 official test images, using the checkpoint with the best validation accuracy.
 
 | Model | Parameters | Best epoch | Validation acc. | Test acc. |
 |---|---:|---:|---:|---:|
-| MLP | – | – | – | – |
-| CNN | – | – | – | – |
+| MLP | 235,146 | 14 | 89.98% | 89.63% |
+| CNN (with augmentation) | 468,010 | 14 | 93.27% | **93.02%** |
 
-<!-- TODO: add training curves, e.g.
-![CNN training curves](assets/cnn_curves.png)
--->
+The CNN gets 698 test images wrong, compared with 1,037 for the MLP: **33% fewer mistakes**.
 
-**Observations** <!-- TODO: write 2–4 sentences of your own after looking at the plots. Prompts:
-- Which classes does the model confuse most, and why might that be (look at misclassified.png)?
-- Did the MLP overfit sooner than the CNN? Where do the train and validation curves split apart?
-- What did augmentation change? -->
+| CNN training | MLP training |
+|---|---|
+| ![CNN training curves](assets/cnn_curves.png) | ![MLP training curves](assets/mlp_curves.png) |
+
+**Per-category test accuracy**
+
+| Category | MLP | CNN | Change |
+|---|---:|---:|---:|
+| Shirt | 69.3% | 77.9% | +8.6 |
+| T-shirt/top | 85.6% | 88.2% | +2.6 |
+| Pullover | 83.0% | 90.6% | +7.6 |
+| Coat | 84.9% | 90.7% | +5.8 |
+| Dress | 90.1% | 92.7% | +2.6 |
+| Ankle boot | 97.0% | 96.5% | −0.5 |
+| Sneaker | 96.1% | 97.4% | +1.3 |
+| Sandal | 95.8% | 98.3% | +2.5 |
+| Trouser | 97.0% | 98.8% | +1.8 |
+| Bag | 97.5% | 99.1% | +1.6 |
+
+### Observations
+
+- **The MLP overfits; the CNN doesn't.** The MLP's validation accuracy levels off near 90% from about epoch 7 while its training accuracy keeps climbing to 92.9%. The CNN's validation accuracy keeps improving through epoch 14.
+- **Augmentation makes training harder than validation.** The CNN's training accuracy stays *below* its validation accuracy, because training images are randomly flipped and shifted while validation images are not.
+- **Tops are the hard part.** Shirts are the worst category for both models. The CNN's biggest confusions are T-shirt → shirt (91), shirt → T-shirt (83) and shirt → coat (75). At 28×28 pixels these garments mostly differ in small details like collars and buttons, which is also where the CNN gains the most over the MLP (+8.6 points on shirts, +7.6 on pullovers).
+- **Footwear and bags are nearly solved.** Both models score at least 95.8% on them, and footwear is only confused with other footwear.
+
+<details>
+<summary>MLP confusion matrix</summary>
+
+![MLP confusion matrix](assets/mlp_confusion_matrix.png)
+
+</details>
 
 ## Project structure
 
@@ -37,6 +61,7 @@ train.py       # train a model, keep the best checkpoint by validation accuracy
 evaluate.py    # per-class accuracy, confusion matrix, error analysis on the test set
 predict.py     # top-k predictions for a test image or your own photo
 compare.py     # summarize all runs as a Markdown table
+export_web.py  # export results and the model for the in-browser demo page
 tests/         # fast unit tests on random tensors (no download needed)
 ```
 
@@ -67,6 +92,9 @@ python predict.py runs/cnn/best.pt --image my_shoe.jpg --invert
 # Results table for this README
 python compare.py
 
+# Export results + model weights for the web demo (writes web/)
+python export_web.py
+
 # Unit tests
 pytest
 ```
@@ -83,13 +111,13 @@ Each run writes `best.pt`, `metrics.json`, `history.json` and `curves.png` to `r
 
 ## Background
 
-This started as a short intro-to-PyTorch exercise in a university AI course: a three-layer fully connected network trained for a few epochs. I rebuilt it as a standalone project. The rebuild adds a convolutional model and a comparison against the original approach, a held-out validation set with checkpointing, data augmentation, GPU/Apple-silicon support, error analysis, a command-line interface, and tests.
+This started as a short intro-to-PyTorch exercise in a university AI course: a three-layer fully connected network trained for a few epochs. I rebuilt it as a standalone project. The rebuild adds a convolutional model and a comparison against the original approach, a held-out validation set with checkpointing, data augmentation, GPU/Apple-silicon support, error analysis, a command-line interface, tests, and an in-browser demo that runs the trained CNN in plain JavaScript.
 
 ## Possible next steps
 
 - Try a deeper network (e.g. a small ResNet) or mixed-precision training
 - Average results over several random seeds and report the spread
-- Export to ONNX and serve predictions from a small web demo
+- Try test-time augmentation or an ensemble of the MLP and CNN
 
 ## Dataset
 
